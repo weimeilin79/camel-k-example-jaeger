@@ -1,5 +1,5 @@
 # Camel K Open Tracing Example
- 
+
 ![Camel K CI](https://github.com/openshift-integration/camel-k-example-basic/workflows/Camel%20K%20CI/badge.svg)
 
 This example demonstrates how to enable Open Tracing with Camel K. It provides a solution for describing and analyzing the cross-process transactions in the distributed deployment model.
@@ -52,7 +52,7 @@ You need to connect to an OpenShift cluster in order to run the examples.
 
 **Apache Camel K CLI ("kamel")**
 
-Apart from the support provided by the VS Code extension, you also need the Apache Camel K CLI ("kamel") in order to 
+Apart from the support provided by the VS Code extension, you also need the Apache Camel K CLI ("kamel") in order to
 access all Camel K features.
 
 [Check if the Apache Camel K CLI ("kamel") is installed](didact://?commandId=vscode.didact.requirementCheck&text=kamel-requirements-status$$kamel%20version$$Camel%20K%20Client&completion=Apache%20Camel%20K%20CLI%20is%20available%20on%20this%20system. "Tests to see if `kamel version` returns a result"){.didact}
@@ -64,13 +64,20 @@ access all Camel K features.
 
 In your project called `userX` this is where we'll run the integrations.
 
-To access the project, open a terminal tab and type the following command:
+Go to your working project, open a terminal tab and type the following command:
 
 
 ```
-oc project userX
+oc project userX-lab-5
 ```
-([^ execute](didact://?commandId=vscode.didact.sendNamedTerminalAString&text=camelTerm$$oc%20project%20userX&completion=New%20project%20creation. "Opens a new terminal and sends the command above"){.didact})
+([^ execute](didact://?commandId=vscode.didact.sendNamedTerminalAString&text=camelTerm$$oc%20project%20userX-lab-5&completion=Use%20your%20namespace. "Opens a new terminal and sends the command above"){.didact})
+
+You should ensure that the Camel K operator is installed. We'll use the `kamel` CLI to do it:
+
+```
+kamel install --skip-operator-setup --skip-cluster-setup --trait-profile OpenShift
+```
+([^ execute](didact://?commandId=vscode.didact.sendNamedTerminalAString&text=camelTerm$$kamel%20install%20--skip-operator-setup%20--skip-cluster-setup%20--trait-profile%20OpenShift&completion=Camel%20K%20platform%20installation. "Opens a new terminal and sends the command above"){.didact})
 
 
 You should have an IntegrationPlatform custom resource in your project. To verify it:
@@ -80,13 +87,13 @@ oc get integrationplatform
 ```
 ([^ execute](didact://?commandId=vscode.didact.sendNamedTerminalAString&text=camelTerm$$oc%20get%20integrationplatform&completion=Camel%20K%20integration%20platform%20verification. "Opens a new terminal and sends the command above"){.didact})
 
-If everything is ok, you should see an IntegrationPlatform named `camel-k` with phase `Ready` (it can take some time for the 
+If everything is ok, you should see an IntegrationPlatform named `camel-k` with phase `Ready` (it can take some time for the
 operator to being installed).
 
 
 ## 2. Configure and Setup Jaeger
 
-Jaeger is a set of distributed components for collecting, storing, and displaying trace information. It comes in “all-in-one” image that runs the entire system. We’ll use that to keep the install simple on the OpenShift plaform. 
+Jaeger is a set of distributed components for collecting, storing, and displaying trace information. It comes in “all-in-one” image that runs the entire system. We’ll use that to keep the install simple on the OpenShift plaform.
 
 To install **Jaeger**, make sure the Jaeger operater is installed:
 
@@ -106,14 +113,14 @@ echo http://$(oc get route jaeger-all-in-one-inmemory -o jsonpath='{.spec.host}'
 
 Currently the only service avalible is the default `jaeger-query`
 
-## 3. Enable open tracing and trace a REST API Call in Camel K Route 
+## 3. Enable open tracing and trace a REST API Call in Camel K Route
 
-Tracing is an essential strategy for managing and monitoring  users’ experience. You will be creating three distributed services, `Order` is a rest service that will call both the `inventory` and `invoice`  which are also rest services. 
+Tracing is an essential strategy for managing and monitoring  users’ experience. You will be creating three distributed services, `Order` is a rest service that will call both the `inventory` and `invoice`  which are also rest services.
 
 
 Quarkus OpenTracing extension in Camel automatically creates a Camel OpenTracingTracer and binds it to the Camel registry. Simply configure the properties to enable open tracing.
 
-See `quarkus.properties`([open](didact://?commandId=vscode.openFolder&projectFilePath=quarkus.properties&completion=Opened%20the%20quarkus.properties%20file "Opens the quarkus.properties file"){.didact}) for details
+See `quarkus.properties`([open](didact://?commandId=vscode.openFolder&projectFilePath=../camel-k-example-jaeger/quarkus.properties&completion=Opened%20the%20quarkus.properties%20file "Opens the quarkus.properties file"){.didact}) for details
 
 ```
 kamel run InventoryService.java --name inventory -d mvn:org.apache.camel.quarkus:camel-quarkus-opentracing  -d camel-jackson --property-file quarkus.properties -t quarkus.enabled=true
@@ -123,16 +130,16 @@ kamel run InventoryService.java --name inventory -d mvn:org.apache.camel.quarkus
 Let's inject the Opentracing Tracer to the camel OrderService.java application. Let's start the inventory service.
 
 
-See customizers/`OpentracingCustomizer.java`([open](didact://?commandId=vscode.openFolder&projectFilePath=customizers/OpentracingCustomizer.java&completion=Opened%20the%20OpentracingCustomizer.java%20file "Opens the OpentracingCustomizer.java file"){.didact}) for more details.
+See customizers/`OpentracingCustomizer.java`([open](didact://?commandId=vscode.openFolder&projectFilePath=../camel-k-example-jaeger/customizers/OpentracingCustomizer.java&completion=Opened%20the%20OpentracingCustomizer.java%20file "Opens the OpentracingCustomizer.java file"){.didact}) for more details.
 
 ```
-kamel run --name order OrderService.java customizers/OpentracingCustomizer.java -d camel-opentracing -d mvn:io.jaegertracing:jaeger-client:1.2.0 -d camel-jackson -d camel-undertow -d camel-swagger-java --property-file application.properties 
+kamel run --name order OrderService.java customizers/OpentracingCustomizer.java -d camel-opentracing -d mvn:io.jaegertracing:jaeger-client:1.2.0 -d camel-jackson -d camel-undertow -d camel-swagger-java --property-file application.properties
 ```
 ([^ execute](didact://?commandId=vscode.didact.sendNamedTerminalAString&text=camelTerm$$kamel%20run%20--name%20order%20OrderService.java%20customizers/OpentracingCustomizer.java%20-d%20camel-opentracing%20-d%20mvn:io.jaegertracing:jaeger-client:1.2.0%20-d%20camel-jackson%20-d%20camel-undertow%20-d%20camel-swagger-java%20--property-file%20application.properties "Opens a new terminal and sends the command above"){.didact})
 
 The `Invoice` REST service is written in groovy, but no worries, we also got that covered!
 
-See `InvoiceService.groovy`([open](didact://?commandId=vscode.openFolder&projectFilePath=InvoiceService.groovy&completion=Opened%20the%20InvoiceService.groovy%20file "Opens the InvoiceService.groovy file"){.didact}).
+See `InvoiceService.groovy`([open](didact://?commandId=vscode.openFolder&projectFilePath=../camel-k-example-jaeger/InvoiceService.groovy&completion=Opened%20the%20InvoiceService.groovy%20file "Opens the InvoiceService.groovy file"){.didact}).
 
 ```
 kamel run InvoiceService.groovy --name invoice customizers/OpentracingCustomizer.java -d camel-opentracing -d mvn:io.jaegertracing:jaeger-client:1.2.0 -d camel-swagger-java -d camel-jackson -d camel-undertow --property-file application.properties
@@ -142,7 +149,7 @@ kamel run InvoiceService.groovy --name invoice customizers/OpentracingCustomizer
 
 ### 4. Calling the REST Services and monitor tracing.
 
-Place an order to trigger the distributed transaction. 
+Place an order to trigger the distributed transaction.
 
 ```
 ORDER_URL=http://$(oc get route order -o jsonpath='{.spec.host}')
@@ -152,16 +159,16 @@ ORDER_URL=http://$(oc get route order -o jsonpath='{.spec.host}')
 ```
 curl --location --request POST $ORDER_URL/place \
 --header 'Content-Type: application/json' \
---data-raw '{ 
+--data-raw '{
 "orderId" : 12345,      
-"itemId" : 2345, 
-"orderItemName" : "Nintendo Switch", 
-"quantity" : 1, 
-"price" : 199, 
-"address" : "445 Test Street", 
-"zipCode" : 83748, 
-"datetime" : "2020-04-11", 
-"department" : "inventory" 
+"itemId" : 2345,
+"orderItemName" : "Nintendo Switch",
+"quantity" : 1,
+"price" : 199,
+"address" : "445 Test Street",
+"zipCode" : 83748,
+"datetime" : "2020-04-11",
+"department" : "inventory"
 }'
 ```
 ([^ execute](didact://?commandId=vscode.didact.sendNamedTerminalAString&text=camelTerm$$curl%20--location%20--request%20POST%20$ORDER_URL/place%20--header%20'Content-Type:%20application/json'%20--data-raw%20'{"orderId"%20:%2012345,"itemId"%20:%202345,"orderItemName"%20:%20"Nintendo%20Switch","quantity"%20:%201,"price"%20:%20199,"address"%20:%20"445%20Test%20Street","zipCode"%20:%2083748,"datetime"%20:%20"2020-04-11","department"%20:%20"inventory"}' "Opens a new terminal and sends the command above"){.didact})
@@ -178,6 +185,26 @@ kamel delete invoice
 ([^ execute](didact://?commandId=vscode.didact.sendNamedTerminalAString&text=camelTerm$$kamel%20delete%20invoice'). "Opens a new terminal and sends the command above"){.didact})
 
 
-Go back to the Jaeger Tracing Console. Find `order` and click on `Find Traces` again. And view your new request. And see the new trace, an error should appear in the trace. 
+Place an order to trigger the distributed transaction again.
+
+```
+curl --location --request POST $ORDER_URL/place \
+--header 'Content-Type: application/json' \
+--data-raw '{
+"orderId" : 12345,      
+"itemId" : 2345,
+"orderItemName" : "Nintendo Switch",
+"quantity" : 1,
+"price" : 199,
+"address" : "445 Test Street",
+"zipCode" : 83748,
+"datetime" : "2020-04-11",
+"department" : "inventory"
+}'
+```
+([^ execute](didact://?commandId=vscode.didact.sendNamedTerminalAString&text=camelTerm$$curl%20--location%20--request%20POST%20$ORDER_URL/place%20--header%20'Content-Type:%20application/json'%20--data-raw%20'{"orderId"%20:%2012345,"itemId"%20:%202345,"orderItemName"%20:%20"Nintendo%20Switch","quantity"%20:%201,"price"%20:%20199,"address"%20:%20"445%20Test%20Street","zipCode"%20:%2083748,"datetime"%20:%20"2020-04-11","department"%20:%20"inventory"}' "Opens a new terminal and sends the command above"){.didact})
+
+
+Go back to the Jaeger Tracing Console. Find `order` and click on `Find Traces` again. And view your new request. Find the new trace result, an error should appear in the trace.
 
 Thank you, you have completed the example.
