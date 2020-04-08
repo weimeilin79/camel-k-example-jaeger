@@ -181,7 +181,7 @@ Stop the `invoice` service.
 ```
 kamel delete invoice
 ```
-([^ execute](didact://?commandId=vscode.didact.sendNamedTerminalAString&text=camelTerm$$kamel%20delete%20invoice'). "Opens a new terminal and sends the command above"){.didact})
+([^ execute](didact://?commandId=vscode.didact.sendNamedTerminalAString&text=camelTerm$$kamel%20delete%20invoice "Opens a new terminal and sends the command above"){.didact})
 
 
 Place an order to trigger the distributed transaction again.
