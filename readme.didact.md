@@ -105,9 +105,9 @@ oc apply -f opentracing/jaeger.yaml
 Once installed, you will be able to access the console via following URL.
 
 ```
-echo http://$(oc get route jaeger-all-in-one-inmemory -o jsonpath='{.spec.host}')
+echo https://$(oc get route jaeger-all-in-one-inmemory -o jsonpath='{.spec.host}')
 ```
-([^ execute](didact://?commandId=vscode.didact.sendNamedTerminalAString&text=camelTerm$$echo%20http://$(oc%20get%20route%20jaeger-all-in-one-inmemory%20-o%20jsonpath='{.spec.host}') "Opens a new terminal and sends the command above"){.didact})
+([^ execute](didact://?commandId=vscode.didact.sendNamedTerminalAString&text=camelTerm$$echo%20https://$(oc%20get%20route%20jaeger-all-in-one-inmemory%20-o%20jsonpath='{.spec.host}') "Opens a new terminal and sends the command above"){.didact})
 
 
 Currently the only service avalible is the default `jaeger-query`
